@@ -2,45 +2,123 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Santa Game</title>
+  <title>Santa 2D Game</title>
   <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; }
-    canvas { display: block; }
+    body { margin:0; overflow:hidden; background: #a0d8f7; }
+    canvas { display: block; margin: 0 auto; background: #d0f0ff; }
   </style>
 </head>
 <body>
   <script src="https://pixijs.download/release/pixi.min.js"></script>
   <script>
-    const app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight, backgroundColor: 0xffffff });
+    // Создаем приложение Pixi
+    const app = new PIXI.Application({
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: 0xd0f0ff, // светло-синий, имитируем снег
+    });
     document.body.appendChild(app.view);
 
-    // Снег — просто фон (можно позже заменить на текстуру)
-    const world = new PIXI.Container();
-    app.stage.addChild(world);
+    // Группы спрайтов для удобства
+    const groundContainer = new PIXI.Container();
+    const objectsContainer = new PIXI.Container();
+    app.stage.addChild(groundContainer);
+    app.stage.addChild(objectsContainer);
 
-    // Санта (пока кружок)
+    // Рисуем "землю" - белый прямоугольник (снег)
+    const ground = new PIXI.Graphics();
+    ground.beginFill(0xffffff);
+    ground.drawRect(0, app.renderer.height - 150, app.renderer.width, 150);
+    ground.endFill();
+    groundContainer.addChild(ground);
+
+    // Добавим несколько "елочек"
+    function createTree(x, y) {
+      const tree = new PIXI.Graphics();
+      tree.beginFill(0x0b6623);
+      tree.moveTo(x, y);
+      tree.lineTo(x - 15, y + 40);
+      tree.lineTo(x + 15, y + 40);
+      tree.closePath();
+      tree.endFill();
+
+      tree.beginFill(0x5d4037);
+      tree.drawRect(x - 5, y + 40, 10, 15);
+      tree.endFill();
+      groundContainer.addChild(tree);
+    }
+    for (let i = 50; i < app.renderer.width; i += 150) {
+      createTree(i, app.renderer.height - 200);
+    }
+
+    // Санта на санях - простой красный прямоугольник
     const santa = new PIXI.Graphics();
     santa.beginFill(0xff0000);
-    santa.drawCircle(0, 0, 25);
+    santa.drawRect(-30, -15, 60, 30);
     santa.endFill();
-    santa.x = app.screen.width / 2;
-    santa.y = app.screen.height / 2;
-    world.addChild(santa);
+    santa.x = app.renderer.width / 2;
+    santa.y = app.renderer.height - 180;
+    objectsContainer.addChild(santa);
 
-    let target = { x: santa.x, y: santa.y };
+    // Подарки - синие квадраты, будут падать с "неба"
+    const gifts = [];
+    function createGift() {
+      const gift = new PIXI.Graphics();
+      gift.beginFill(0x0000ff);
+      gift.drawRect(-15, -15, 30, 30);
+      gift.endFill();
+      gift.x = Math.random() * app.renderer.width;
+      gift.y = -30;
+      objectsContainer.addChild(gift);
+      gifts.push(gift);
+    }
 
-    // Клик — перемещение
-    app.renderer.plugins.interaction.on('pointerdown', (e) => {
-      const pos = e.data.global;
-      target.x = pos.x;
-      target.y = pos.y;
+    // Создаем подарки через равные интервалы
+    setInterval(() => {
+      if (gifts.length < 5) createGift();
+    }, 2000);
+
+    // Перемещение Санты к точке
+    let targetX = santa.x;
+    let targetY = santa.y;
+    const speed = 4;
+
+    app.view.addEventListener('pointerdown', e => {
+      const rect = app.view.getBoundingClientRect();
+      targetX = e.clientX - rect.left;
+      targetY = santa.y; // по вертикали не двигаем (по земле)
     });
 
-    // Плавное движение
+    // Обновление кадра
     app.ticker.add(() => {
-      santa.x += (target.x - santa.x) * 0.05;
-      santa.y += (target.y - santa.y) * 0.05;
+      // Двигаем Санту плавно
+      const dx = targetX - santa.x;
+      if (Math.abs(dx) > speed) {
+        santa.x += speed * Math.sign(dx);
+      } else {
+        santa.x = targetX;
+      }
+
+      // Двигаем подарки вниз
+      for (let i = gifts.length - 1; i >= 0; i--) {
+        const gift = gifts[i];
+        gift.y += 3;
+
+        // Проверяем пересечение с Сантой
+        const dx = gift.x - santa.x;
+        const dy = gift.y - santa.y;
+        if (Math.abs(dx) < 30 && Math.abs(dy) < 20) {
+          // Собрали подарок
+          objectsContainer.removeChild(gift);
+          gifts.splice(i, 1);
+          // Тут можно добавить логику для начисления очков или др.
+          console.log("Подарок собран!");
+        } else if (gift.y > app.renderer.height) {
+          // Подарок упал вниз и исчез
+          objectsContainer.removeChild(gift);
+          gifts.splice(i, 1);
+        }
+      }
     });
   </script>
 </body>
