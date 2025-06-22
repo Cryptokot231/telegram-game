@@ -9,6 +9,7 @@
   </style>
 </head>
 <body>
+  <!-- Подключаем Pixi.js с CDN -->
   <script src="https://pixijs.download/release/pixi.min.js"></script>
   <script>
     // Создаем приложение Pixi
@@ -19,7 +20,7 @@
     });
     document.body.appendChild(app.view);
 
-    // Группы спрайтов для удобства
+    // Контейнеры для земли и объектов
     const groundContainer = new PIXI.Container();
     const objectsContainer = new PIXI.Container();
     app.stage.addChild(groundContainer);
@@ -80,18 +81,16 @@
 
     // Перемещение Санты к точке
     let targetX = santa.x;
-    let targetY = santa.y;
     const speed = 4;
 
     app.view.addEventListener('pointerdown', e => {
       const rect = app.view.getBoundingClientRect();
       targetX = e.clientX - rect.left;
-      targetY = santa.y; // по вертикали не двигаем (по земле)
     });
 
     // Обновление кадра
     app.ticker.add(() => {
-      // Двигаем Санту плавно
+      // Двигаем Санту плавно по горизонтали
       const dx = targetX - santa.x;
       if (Math.abs(dx) > speed) {
         santa.x += speed * Math.sign(dx);
@@ -111,7 +110,6 @@
           // Собрали подарок
           objectsContainer.removeChild(gift);
           gifts.splice(i, 1);
-          // Тут можно добавить логику для начисления очков или др.
           console.log("Подарок собран!");
         } else if (gift.y > app.renderer.height) {
           // Подарок упал вниз и исчез
