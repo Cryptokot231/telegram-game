@@ -7,7 +7,18 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "node-telegram-bot-api": "^0.66.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cryptokot231/telegram-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cryptokot231/telegram-game/issues"
+  },
+  "homepage": "https://github.com/Cryptokot231/telegram-game#readme"
 }
