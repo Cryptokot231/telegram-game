@@ -1,39 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Mini Game</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Снежная Локация</title>
   <style>
-    body {
+    body, html {
+      margin: 0; padding: 0; overflow: hidden; background: #001F3F;
       font-family: sans-serif;
-      text-align: center;
-      background-color: #f0f8ff;
-      padding: 50px;
     }
-    h1 {
-      margin-bottom: 20px;
-    }
-    button {
-      font-size: 24px;
-      padding: 10px 20px;
-      cursor: pointer;
-    }
-    #score {
-      font-size: 36px;
-      margin-top: 20px;
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      background: #001F3F;
     }
   </style>
 </head>
 <body>
-  <h1>Click Game</h1>
-  <button onclick="addCoin()">Click Me!</button>
-  <div id="score">Coins: 0</div>
+  <canvas id="gameCanvas"></canvas>
 
   <script>
-    let coins = 0;
-    function addCoin() {
-      coins++;
-      document.getElementById("score").innerText = "Coins: " + coins;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Снег
+    const snowflakes = [];
+    const maxSnowflakes = 150;
+
+    class Snowflake {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 3 + 1;
+        this.speed = Math.random() * 1 + 0.5;
+        this.wind = Math.random() * 0.5 - 0.25;
+      }
+      update() {
+        this.y += this.speed;
+        this.x += this.wind;
+        if (this.y > canvas.height) {
+          this.y = 0;
+          this.x = Math.random() * canvas.width;
+        }
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.fillStyle = 'white';
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < maxSnowflakes; i++) {
+      snowflakes.push(new Snowflake());
+    }
+
+    // Елочки
+    function drawTree(x, y, scale=1) {
+      ctx.fillStyle = '#0B6623';
+      ctx.beginPath();
+      // треугольники елки
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 20 * scale, y + 60 * scale);
+      ctx.lineTo(x + 20 * scale, y + 60 * scale);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(x, y - 20 * scale);
+      ctx.lineTo(x - 18 * scale, y + 40 * scale);
+      ctx.lineTo(x + 18 * scale, y + 40 * scale);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#5C4033'; // ствол
+      ctx.fillRect(x - 5 * scale, y + 60 * scale, 10 * scale, 15 * scale);
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Рисуем елочки внизу экрана
+      drawTree(100, canvas.height - 120, 1.5);
+      drawTree(200, canvas.height - 110, 1.2);
+      drawTree(300, canvas.height - 130, 1.7);
+      drawTree(400, canvas.height - 115, 1.3);
+      drawTree(500, canvas.height - 125, 1.6);
+
+      // Снег
+      snowflakes.forEach(flake => {
+        flake.update();
+        flake.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
   </script>
 </body>
 </html>
