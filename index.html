@@ -1,105 +1,47 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Santa 3D Location</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santa Game</title>
   <style>
-    body, html { margin: 0; padding: 0; overflow: hidden; background: #ffffff; }
+    body, html { margin: 0; padding: 0; overflow: hidden; }
     canvas { display: block; }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.142.0/build/three.min.js"></script>
+  <script src="https://pixijs.download/release/pixi.min.js"></script>
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0xFFFFFF, 10, 150);
+    const app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight, backgroundColor: 0xffffff });
+    document.body.appendChild(app.view);
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
-    camera.lookAt(0, 0, 0); // ОБЯЗАТЕЛЬНО!
+    // Снег — просто фон (можно позже заменить на текстуру)
+    const world = new PIXI.Container();
+    app.stage.addChild(world);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0xFFFFFF);
+    // Санта (пока кружок)
+    const santa = new PIXI.Graphics();
+    santa.beginFill(0xff0000);
+    santa.drawCircle(0, 0, 25);
+    santa.endFill();
+    santa.x = app.screen.width / 2;
+    santa.y = app.screen.height / 2;
+    world.addChild(santa);
 
-    // Свет
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-    hemiLight.position.set(0, 20, 0);
-    scene.add(hemiLight);
+    let target = { x: santa.x, y: santa.y };
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(-5, 10, -5);
-    scene.add(dirLight);
-
-    // Земля
-    const groundGeo = new THREE.PlaneGeometry(200, 200);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0xe0f7fa });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    // Добавим 2 ряда ёлок
-    function addTree(x, z, scale = 1) {
-      const top = new THREE.ConeGeometry(1, 2, 8);
-      const topMat = new THREE.MeshLambertMaterial({ color: 0x0b6623 });
-      const tree = new THREE.Mesh(top, topMat);
-      tree.position.set(x, 1.5 * scale, z);
-      tree.scale.set(scale, scale, scale);
-      scene.add(tree);
-
-      const trunk = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 6);
-      const trunkMat = new THREE.MeshLambertMaterial({ color: 0x5d4037 });
-      const trunkMesh = new THREE.Mesh(trunk, trunkMat);
-      trunkMesh.position.set(x, 0.25, z);
-      scene.add(trunkMesh);
-    }
-
-    for (let i = -40; i <= 40; i += 20) {
-      addTree(i, -20, 1);
-      addTree(i, 20, 1);
-    }
-
-    // Санта — коробка
-    const santaGeo = new THREE.BoxGeometry(1, 1, 2);
-    const santaMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-    const santa = new THREE.Mesh(santaGeo, santaMat);
-    santa.position.set(0, 0.5, 0);
-    scene.add(santa);
-
-    // Resize адаптация
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    // Клик — перемещение
+    app.renderer.plugins.interaction.on('pointerdown', (e) => {
+      const pos = e.data.global;
+      target.x = pos.x;
+      target.y = pos.y;
     });
 
-    // Клик — перемещение сцены
-    window.addEventListener('pointerdown', (e) => {
-      const mouse = new THREE.Vector2(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1
-      );
-      const ray = new THREE.Raycaster();
-      ray.setFromCamera(mouse, camera);
-      const intersects = ray.intersectObject(ground);
-      if (intersects.length > 0) {
-        const point = intersects[0].point;
-        const dx = santa.position.x - point.x;
-        const dz = santa.position.z - point.z;
-        scene.position.x += dx;
-        scene.position.z += dz;
-      }
+    // Плавное движение
+    app.ticker.add(() => {
+      santa.x += (target.x - santa.x) * 0.05;
+      santa.y += (target.y - santa.y) * 0.05;
     });
-
-    function animate() {
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    animate();
   </script>
 </body>
 </html>
