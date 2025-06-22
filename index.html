@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+      padding: 50px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    #score {
+      font-size: 36px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Click Game</h1>
+  <button onclick="addCoin()">Click Me!</button>
+  <div id="score">Coins: 0</div>
+
+  <script>
+    let coins = 0;
+    function addCoin() {
+      coins++;
+      document.getElementById("score").innerText = "Coins: " + coins;
+    }
+  </script>
+</body>
+</html>
